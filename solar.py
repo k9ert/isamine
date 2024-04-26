@@ -1,13 +1,15 @@
 
 import requests
 import random
+import os
 import goodwe
 import time
 import datetime
 
 
-power_switch_ip = "192.168.178.172"
-solar_ip = '192.168.1.14'
+power_switch_ip = os.getenv("POWER_SWITCH_IP",  "192.168.178.172")
+solar_ip = os.getenv('192.168.1.14')
+env = os.getenv('ENV', 'test').lower() 
 
 max_switch_time_milli = 4000
 last_switch_time = 0
@@ -35,14 +37,29 @@ def is_within_allowed_time_window():
 
 def mine_switcher():
     # We don't want to toggle too often
+    print("    --> Start Run")
     if not can_toggle_based_on_time_interval():
+        print("too often ==> exit")
         return
     
     # Fetch the current mining state (update get_report() accordingly)
-    currently_mining = get_report()
+    currently_mining = get_status()
     
     print("Currently mining: " + str(currently_mining))
-    toggle_power(should_we_mine(currently_mining))
+    if (currently_mining and  not is_within_allowed_time_window()):
+        print("toggle off (not in allowed window)")
+        toggle_power(False)
+        print("    --> End Run")
+        return
+    battery = get_battery_soc()
+    if (battery) > 80:
+        print(f"toggle on ({battery})")
+        toggle_power(True)
+    else:
+        print(f"toggle off ({battery})")
+        toggle_power(False)
+    print("    --> End Run")
+    #toggle_power(should_we_mine(currently_mining))
     
 def toggle_power(yes_or_no):
     state = "1" if yes_or_no else "0"
@@ -66,7 +83,9 @@ def should_we_mine(currently_mining):
         last_switch_time = time.time() * 1000  # Update to current time in milliseconds
     return should_mine
 
-def get_report():
+def get_status():
+    if env == "test":
+        return True
     url = f'http://{power_switch_ip}/report'
     try:
         response = requests.get(url)
@@ -79,16 +98,16 @@ def get_report():
         print(f"Error making request to {url}: {e}")
 
 def get_battery_soc():
-    control_output = get_control_output()
-    lines = control_output.split("\n") 
+    control_output = get_fake_output() if env == "test"  else get_runtime_data()
+    lines = control_output.split("\n")
     for line in lines: 
-        if "battery_soc" in line: 
+        if line.startswith("battery_soc"): 
             soc = line.split("=")[1].strip().split(" ")[0] 
             return int(soc) 
-        return None
+    return None
 
 
-def get_control_output():
+def get_fake_output():
     return """
 vpv1:            PV1 Voltage = 0.0 V
 ipv1:            PV1 Current = 0.0 A
@@ -150,9 +169,12 @@ house_consumption:               House Consumption = 816 W
 """
 
 async def get_runtime_data():
+    output = ""
     inverter = await goodwe.connect(solar_ip)
     runtime_data = await inverter.read_runtime_data()
 
     for sensor in inverter.sensors():
         if sensor.id_ in runtime_data:
-            print(f"{sensor.id_}: \t\t {sensor.name} = {runtime_data[sensor.id_]} {sensor.unit}")
+            output = output + f"{sensor.id_}: \t\t {sensor.name} = {runtime_data[sensor.id_]} {sensor.unit}"
+            output = output + "\n"
+    return output

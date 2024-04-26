@@ -4,6 +4,14 @@ from fastapi_amis_admin.admin.site import AdminSite
 from datetime import date
 from fastapi_scheduler import SchedulerAdmin
 from solar import mine_switcher
+from dotenv import load_dotenv
+import os
+
+env = os.getenv('ENV', 'test').lower()  # Default to 'test' if ENV is not set
+if env == 'prod':
+    dotenv_path = '.env.prod'
+elif env == 'test':
+    dotenv_path = '.env.test'
 
 app = FastAPI()
 
