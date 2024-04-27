@@ -3,3 +3,4 @@ aiosqlite
 goodwe
 requests
 python-dotenv
+python-jose

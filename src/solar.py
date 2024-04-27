@@ -5,14 +5,17 @@ import os
 import goodwe
 import time
 import datetime
+from .settings_ep import settings
 
 
 power_switch_ip = os.getenv("POWER_SWITCH_IP",  "192.168.178.172")
 solar_ip = os.getenv('192.168.1.14')
 env = os.getenv('ENV', 'test').lower() 
 
-max_switch_time_milli = 4000
 last_switch_time = 0
+last_switch_result = None
+
+
 
 
 def can_toggle_based_on_time_interval():
@@ -20,7 +23,7 @@ def can_toggle_based_on_time_interval():
     current_time_milli = time.time() * 1000  # Get current time in milliseconds
     
     # Check if enough time has passed since the last switch
-    if (current_time_milli - last_switch_time) < max_switch_time_milli:
+    if (current_time_milli - last_switch_time) < settings["max_switch_time_milli"]:
         print("Switching too soon. Waiting for the max switch time to pass.")
         return False
     return True
@@ -28,8 +31,8 @@ def can_toggle_based_on_time_interval():
 def is_within_allowed_time_window():
     # Check current hour to ensure it's between 10 AM (inclusive) and 4 PM (exclusive)
     current_hour = datetime.datetime.now().hour
-    if not(10 <= current_hour < 16):
-        print("Currently outside the allowed time window (10 AM to 4 PM). Toggling not allowed.")
+    if not(settings["do_not_mine_before"] <= current_hour < settings["do_not_mine_after"]):
+        print(f"Currently outside the allowed time window ({settings['do_not_mine_before']} AM to {settings['do_not_mine_after']} PM). Toggling not allowed.")
         return False
     return True
 
@@ -67,6 +70,7 @@ def toggle_power(yes_or_no):
     
     try:
         response = requests.get(url)
+        last_switch_result = yes_or_no
     except requests.exceptions.RequestException as e:
         print(f"Error making request to {url}: {e}")
 
@@ -128,7 +132,7 @@ pbattery1:               Battery Power = 593 W
 battery_charge_limit:            Battery Charge Limit = 78 A
 battery_discharge_limit:                 Battery Discharge Limit = 78 A
 battery_error:           Battery Error Code = 0 
-battery_soc:             Battery State of Charge = 70 %
+battery_soc:             Battery State of Charge = 81 %
 battery_soh:             Battery State of Health = 102 %
 battery_mode:            Battery Mode code = 2 
 battery_mode_label:              Battery Mode = Discharge 

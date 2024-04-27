@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Miner Status SPA</title>
+    <script src="/static/js/script.js"></script>
+</head>
+<body>
+    <h1>Miner Status</h1>
+    <p id="miner-status">Loading...</p>
+
+    <h1>Miner Settings</h1>
+    <div>
+        <label for="before">Do Not Mine Before: </label>
+        <input type="number" id="before">
+    </div>
+    <div>
+        <label for="after">Do Not Mine After: </label>
+        <input type="number" id="after">
+    </div>
+    <div>
+        <label for="maxTime">Max Switch Time (ms): </label>
+        <input type="number" id="maxTime">
+    </div>
+    <button onclick="updateSettings()">Update Settings</button>
+</body>
+</html>
