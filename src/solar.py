@@ -8,8 +8,10 @@ import datetime
 from .settings_ep import settings
 
 
-power_switch_ip = os.getenv("POWER_SWITCH_IP",  "192.168.178.172")
-solar_ip = os.getenv('192.168.1.14')
+power_switch_ip = os.getenv("POWER_SWITCH_IP",  "192.168.2.142")
+solar_ip = os.getenv("SOLAR_IP", '192.168.2.110')
+
+
 env = os.getenv('ENV', 'test').lower() 
 
 last_switch_time = 0
