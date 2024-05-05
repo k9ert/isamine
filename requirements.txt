@@ -4,3 +4,4 @@ goodwe
 requests
 python-dotenv
 python-jose
+pydantic-settings
