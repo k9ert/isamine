@@ -6,7 +6,7 @@ from pydantic import BaseModel
 settings = {
     "do_not_mine_before": 10,
     "do_not_mine_after": 16,
-    "max_switch_time_milli": 4000,
+    "max_switch_time_milli": 60000,
 }
 
 class Settings(BaseModel):
